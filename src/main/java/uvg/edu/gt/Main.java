@@ -6,21 +6,18 @@ import uvg.edu.gt.utils.CSVReader;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Main {
-    private static BinarySearchTree<Product> productsBySku = new BinarySearchTree<>();
+    private static List<Product> allProducts;
+    private static List<Product> filteredProducts;
 
     public static void main(String[] args) {
         // Cargar datos desde el CSV
         System.out.println("Cargando datos desde CSV...");
-        List<Product> products = CSVReader.readProductsFromCSV("data.csv");
+        allProducts = CSVReader.readProductsFromCSV("data.csv");
 
-        // Agregar productos al árbol
-        for (Product product : products) {
-            productsBySku.add(product);
-        }
-
-        System.out.println("Se han cargado " + productsBySku.size() + " productos.");
+        System.out.println("Se han cargado " + allProducts.size() + " productos.");
 
         // Interfaz de usuario
         Scanner scanner = new Scanner(System.in);
@@ -28,9 +25,9 @@ public class Main {
 
         while (!exit) {
             System.out.println("\n--- MENÚ ---");
-            System.out.println("1. Buscar producto por SKU");
-            System.out.println("2. Listar productos ordenados por SKU (ascendente)");
-            System.out.println("3. Listar productos ordenados por SKU (descendente)");
+            System.out.println("1. Buscar productos por SKU");
+            System.out.println("2. Listar productos ordenados por precio (ascendente)");
+            System.out.println("3. Listar productos ordenados por precio (descendente)");
             System.out.println("4. Salir");
             System.out.print("Seleccione una opción: ");
 
@@ -39,13 +36,13 @@ public class Main {
 
             switch (option) {
                 case 1:
-                    searchProductBySku(scanner);
+                    searchProductsBySku(scanner);
                     break;
                 case 2:
-                    listProductsAscending();
+                    listProductsByPrice(true);
                     break;
                 case 3:
-                    listProductsDescending();
+                    listProductsByPrice(false);
                     break;
                 case 4:
                     exit = true;
@@ -59,35 +56,35 @@ public class Main {
         System.out.println("¡Gracias por usar el sistema!");
     }
 
-    private static void searchProductBySku(Scanner scanner) {
+    private static void searchProductsBySku(Scanner scanner) {
         System.out.print("Ingrese el SKU del producto: ");
         String sku = scanner.nextLine();
 
-        // Crear un producto temporal con solo el SKU para la búsqueda
-        Product searchKey = new Product(sku, 0, 0, "", "");
-        Product foundProduct = productsBySku.search(searchKey);
+        // Filtrar productos por SKU
+        filteredProducts = allProducts.stream()
+                .filter(product -> product.getSku().equals(sku))
+                .collect(Collectors.toList());
 
-        if (foundProduct != null) {
-            System.out.println("\nProducto encontrado:");
-            System.out.println("SKU: " + foundProduct.getSku());
-            System.out.println("Nombre: " + foundProduct.getProductName());
-            System.out.println("Categoría: " + foundProduct.getCategory());
-            System.out.println("Precio actual: $" + foundProduct.getPriceCurrent());
-            System.out.println("Precio retail: $" + foundProduct.getPriceRetail());
+        if (!filteredProducts.isEmpty()) {
+            System.out.println("Se encontraron " + filteredProducts.size() + " productos con el SKU: " + sku);
         } else {
             System.out.println("No se encontró ningún producto con el SKU: " + sku);
         }
     }
 
-    private static void listProductsAscending() {
-        System.out.println("\nListado de productos (SKU ascendente):");
-        List<Product> sortedProducts = productsBySku.getInOrderList();
-        displayProducts(sortedProducts);
-    }
+    private static void listProductsByPrice(boolean ascending) {
+        if (filteredProducts == null || filteredProducts.isEmpty()) {
+            System.out.println("Primero busque los productos por SKU utilizando la opción 1.");
+            return;
+        }
 
-    private static void listProductsDescending() {
-        System.out.println("\nListado de productos (SKU descendente):");
-        List<Product> sortedProducts = productsBySku.getReverseInOrderList();
+        System.out.println("\nListado de productos (precio " + (ascending ? "ascendente" : "descendente") + "):");
+        List<Product> sortedProducts = filteredProducts.stream()
+                .sorted((p1, p2) -> ascending
+                        ? Double.compare(p1.getPriceCurrent(), p2.getPriceCurrent())
+                        : Double.compare(p2.getPriceCurrent(), p1.getPriceCurrent()))
+                .collect(Collectors.toList());
+
         displayProducts(sortedProducts);
     }
 

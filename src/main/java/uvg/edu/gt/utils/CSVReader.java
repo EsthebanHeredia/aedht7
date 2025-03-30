@@ -37,9 +37,9 @@ public class CSVReader {
             }
 
             // Verificar que las columnas requeridas existen
-            if (!headerMap.containsKey("SKU") || !headerMap.containsKey("Price_Retail") ||
-                    !headerMap.containsKey("Price_Current") || !headerMap.containsKey("Product_Name") ||
-                    !headerMap.containsKey("Category")) {
+            if (!headerMap.containsKey("SKU") || !headerMap.containsKey("PRICE_RETAIL") ||
+                    !headerMap.containsKey("PRICE_CURRENT") || !headerMap.containsKey("PRODUCT_NAME") ||
+                    !headerMap.containsKey("CATEGORY")) {
                 System.err.println("El archivo CSV no contiene todas las columnas requeridas");
                 return products;
             }
@@ -53,10 +53,10 @@ public class CSVReader {
 
                     // Obtener los valores de las columnas específicas
                     String sku = values[headerMap.get("SKU")];
-                    double priceRetail = parseDouble(values[headerMap.get("Price_Retail")]);
-                    double priceCurrent = parseDouble(values[headerMap.get("Price_Current")]);
-                    String productName = values[headerMap.get("Product_Name")];
-                    String category = values[headerMap.get("Category")];
+                    double priceRetail = parseDouble(values[headerMap.get("PRICE_RETAIL")]);
+                    double priceCurrent = parseDouble(values[headerMap.get("PRICE_CURRENT")]);
+                    String productName = values[headerMap.get("PRODUCT_NAME")];
+                    String category = values[headerMap.get("CATEGORY")];
 
                     Product product = new Product(sku, priceRetail, priceCurrent, productName, category);
                     products.add(product);
@@ -80,7 +80,7 @@ public class CSVReader {
         for (int i = 0; i < line.length(); i++) {
             char c = line.charAt(i);
 
-            if (c == '"') {
+            if (c == '\"') {
                 // Toggle estado "entre comillas"
                 inQuotes = !inQuotes;
             } else if (c == ',' && !inQuotes) {
@@ -92,19 +92,15 @@ public class CSVReader {
                 sb.append(c);
             }
         }
-
-        // No olvidar el último token
         tokens.add(sb.toString().trim());
-
         return tokens.toArray(new String[0]);
     }
 
     private static double parseDouble(String value) {
-        // Limpiamos caracteres no numéricos (como '$', ',', etc.)
-        String cleaned = value.replaceAll("[^\\d.]", "");
-        if (cleaned.isEmpty()) {
-            return 0.0;
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return 0;
         }
-        return Double.parseDouble(cleaned);
     }
 }
